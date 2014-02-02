@@ -332,7 +332,7 @@ LuaTianxiangCard = sgs.CreateSkillCard{
 	end
 }
 LuaTianxiangVS = sgs.CreateViewAsSkill{
-	name = "LuaTianxiang" ,
+	name = "LuaTianxiangVS" ,
 	n = 1 ,
 	view_filter = function(self, selected, to_select)
 		if #selected ~= 0 then return false end
