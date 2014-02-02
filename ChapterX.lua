@@ -255,7 +255,40 @@ LuaXiaoji = sgs.CreateTriggerSkill{
 	技能名：枭姬
 	相关武将：1v1·孙尚香1v1
 	描述：每当你失去一张装备区的装备牌后，你可以选择一项：摸两张牌，或回复1点体力。
+	引用：Lua1V1Xiaoji
+	状态：0610验证通过
 ]]--
+Lua1V1Xiaoji = sgs.CreateTriggerSkill{
+	name = "Lua1V1Xiaoji" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardsMoveOneTime} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local move = data:toMoveOneTime()
+		if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceEquip) then
+			for i = 0, move.card_ids:length() - 1, 1 do
+				if not player:isAlive() then return false end
+				if move.from_places:at(i) == sgs.Player_PlaceEquip then
+					if room:askForSkillInvoke(player, self:objectName()) then
+						if not player:then
+							player:drawCards(2)
+						else
+							local choice = room:askForChoice(player, self:objectName(), "card+hp")
+							if choice == "card" then
+								player:drawCards(2)
+							elseif choice == "hp" then
+								local recover = sgs.RecoverStruct()
+								recover.who = player
+								room:recover(player, recover)
+							end
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：骁果
 	相关武将：国战·乐进
