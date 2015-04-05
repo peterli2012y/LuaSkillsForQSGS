@@ -1,14 +1,14 @@
 --[[
 	代码速查手册（B区）
 	技能索引：
-		八阵、霸刀、霸王、拜印、豹变、暴虐、悲歌、北伐、崩坏、笔伐、闭月、补益、不屈、不屈
+		八阵、霸刀、霸王、拜印、豹变、暴凌、暴虐、悲歌、北伐、贲育、奔袭、崩坏、笔伐、闭月、补益、不屈、不屈
 ]]--
 --[[
 	技能名：八阵（锁定技）
 	相关武将：火·诸葛亮
-	描述：若你的装备区没有防具牌，视为你装备着【八卦阵】。
+	描述：锁定技。若你的装备区没有防具牌，视为你装备【八卦阵】。
 	引用：LuaBazhen
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaBazhen = sgs.CreateTriggerSkill{
 	name = "LuaBazhen",
@@ -38,15 +38,11 @@ LuaBazhen = sgs.CreateTriggerSkill{
 		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if not target:getArmor() then
-					if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
-						if target:getMark("Equips_Nullified_to_Yourself") == 0 then
-							local list = target:getTag("Qinggang"):toStringList()
-							return #list == 0
-						end
-					end
+		if target and target:isAlive() and target:hasSkill(self:objectName()) and not target:getArmor() then
+			if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
+				if target:getMark("Equips_Nullified_to_Yourself") == 0 then
+					local list = target:getTag("Qinggang"):toStringList()
+					return #list == 0
 				end
 			end
 		end
@@ -56,9 +52,9 @@ LuaBazhen = sgs.CreateTriggerSkill{
 --[[
 	技能名：霸刀
 	相关武将：智·华雄
-	描述：当你成为黑色的【杀】目标后，你可以使用一张【杀】
+	描述：当你成为黑色的【杀】的目标后，你可以使用一张【杀】。
 	引用：LuaBadao
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaBadao = sgs.CreateTriggerSkill{
 	name = "LuaBadao" ,
@@ -221,6 +217,34 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：暴凌
+	相关武将：势·董卓
+	描述：觉醒技。出牌阶段结束时，若你本局游戏发动过“横征”，你增加3点体力上限，回复3点体力，然后获得“崩坏”。
+	引用：LuaBaoling
+	状态：未完成
+]]--
+LuaBaoling = sgs.CreateTriggerSkill{
+	name = "LuaBaoling" ,
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseEnd} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Play and player:getMark("baoling") < 1 and ... then -- 发动横征后的Mark或flag
+			local log = sgs.LogMessage()
+			log.from = player
+			log.arg = self:objectName()
+			log.arg2 = "hengzheng"
+			room:sendLog(log)
+			room:changeMaxHpForAwakenSkill(player, 3)
+			local recover = sgs.RecoverStruct()
+			recover.who = player
+			recover.recover = 3
+			room:recover(player, recover)
+			player:addMark("baoling")
+		end
+		
+		
+--[[
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
 	描述：每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。
@@ -380,7 +404,16 @@ LuaBeifa = sgs.CreateTriggerSkill{
 		return false
 	end
 }
-
+--[[
+	技能名：贲育
+	相关武将：SP·程昱
+	描述：每当你受到有来源的伤害后，若伤害来源存活，若你的手牌数：小于X，你可以将手牌补至X（至多为5）张；大于X，你可以弃置至少X+1张手牌，然后对伤害来源造成1点伤害。（X为伤害来源的手牌数）
+--]]
+--[[
+	技能名：奔袭（锁定技）
+	相关武将：一将成名2014·吴懿
+	描述：锁定技。你的回合内，你与其他角色的距离-X。你的回合内，若你与所有其他角色距离均为1，其他角色的防具无效，你使用【杀】可以额外选择一个目标。（X为本回合你已使用结算完毕的牌数）
+]]--
 --[[
 	技能名：崩坏（锁定技）
 	相关武将：林·董卓
@@ -421,12 +454,11 @@ LuaBenghuai = sgs.CreateTriggerSkill{
 	相关武将：SP·陈琳
 	描述：结束阶段开始时，你可以将一张手牌移出游戏并选择一名其他角色，该角色的回合开始时，观看该牌，然后选择一项：交给你一张与该牌类型相同的牌并获得该牌，或将该牌置入弃牌堆并失去1点体力。
 	引用：LuaBifa
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaBifaCard = sgs.CreateSkillCard{
-	name = "LuaBifa",
-	target_fixed = false,
-	will_throw = false,
+	name = "LuaBifa" ,
+	will_throw = false ,
 	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			local bifalist = to_select:getPile("bifa")
@@ -442,37 +474,22 @@ LuaBifaCard = sgs.CreateSkillCard{
 		local tag = sgs.QVariant()
 		tag:setValue(source)
 		room:setTag(keystr, tag)
-		local cards = self:getSubcards()
-		for _,id in sgs.qlist(cards) do
-			target:addToPile("bifa", id, false)
-		end
+		target:addToPile("bifa", self:getId(), false)
 	end
 }
-LuaBifaVS = sgs.CreateViewAsSkill{
+LuaBifaVS = sgs.CreateOneCardViewAsSkill{
 	name = "LuaBifa",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaBifaCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaBifa"
+	filter_pattern = "." ,
+	response_pattern = "@@LuaBifa" ,
+	view_as = function(self, card)
+		local cd = LuaBifaCard:clone()
+		cd:addSubcard(card)
+		return cd
 	end
 }
-LuaBifa = sgs.CreateTriggerSkill{
+LuaBifa = sgs.CreatePhaseChangeSkill{
 	name = "LuaBifa",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	view_as_skill = LuaBifaVS,
+	view_as_skill = LuaBifaVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:isAlive() and player:hasSkill(self:objectName()) then
@@ -536,18 +553,58 @@ LuaBifa = sgs.CreateTriggerSkill{
 	相关武将：标准·貂蝉、SP貂蝉、☆SP貂蝉、1v1·貂蝉1v1、怀旧-标准·貂蝉-旧、SP·台版貂蝉
 	描述：结束阶段开始时，你可以摸一张牌。
 	引用：LuaBiyue
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaBiyue = sgs.CreateTriggerSkill{
-	name = "LuaBiyue",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Finish then
-			local room = player:getRoom()
-			if room:askForSkillInvoke(player, self:objectName()) then
-				player:drawCards(1)
+LuaBiyue = sgs.CreatePhaseChangeSkill{
+	name = "LuaBiyue" ,
+	frequency = sgs.Skill_Frequent ,
+	on_phasechange = function(self, player)
+		if player:getPhase() == sgs.Player_Finish and player:askForSkillInvoke(self:objectName()) then
+			player:drawCards(1)
+		end
+	end
+}
+--[[
+	技能名：秉壹
+	相关武将：一将成名2014·顾雍
+	描述：结束阶段开始时，若你有手牌，你可以展示所有手牌：若均为同一颜色，你可以令至多X名角色各摸一张牌。（X为你的手牌数）
+	引用：LuaBingyi
+	状态：0405验证通过
+]]--
+LuaBingyiCard = sgs.CreateSkillCard{
+	name = "LuaBingyiCard" ,
+	filter = function(self, targets, to_select, player)
+		return #targets < player:getHandcardNum()
+	end ,
+	on_use = function(self, room, player)
+		room:showAllCards(player)
+		local cards = player:getHandcards()
+		local is_red = cards:first():isRed()
+		for _, card in sgs.qlist(cards) do
+			if card:isRed() ~= is_red then
+				return true
 			end
+		end
+		for _, target in ipairs(targets) do
+			target:drawCards(1)
+		end
+		return false
+	end
+}
+LuaBingyiVS = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaBingyi" ,
+	response_pattern = "@@LuaBingyi" ,
+	view_as = function()
+		return LuaBingyiCard:clone()
+	end
+}
+LuaBingyi = sgs.CreatePhaseChangeSkill{
+	name = "LuaBingyi" ,
+	view_as_skill = LuaBingyiVS ,
+	on_phasechange = function(self, player)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Finish and not player:isKongcheng() then
+			room:askForUseCard(player, "@@LuaBingyi", "@bingyi-card")
 		end
 	end
 }
@@ -561,7 +618,7 @@ LuaBiyue = sgs.CreateTriggerSkill{
 
 LuaBuyi = sgs.CreateTriggerSkill{
 	name = "LuaBuyi",
-	events = {sgs.Dying},
+	events = {sgs.Dying} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local dying = data:toDying()
