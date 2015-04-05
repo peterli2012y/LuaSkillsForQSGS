@@ -242,8 +242,8 @@ LuaBaoling = sgs.CreateTriggerSkill{
 			room:recover(player, recover)
 			player:addMark("baoling")
 		end
-		
-		
+	end	
+}		
 --[[
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
